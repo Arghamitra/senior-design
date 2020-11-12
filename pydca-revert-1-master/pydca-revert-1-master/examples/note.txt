@@ -1,0 +1,19 @@
+
+1. trimmed_data = trimmer.get_msa_trimmed_by_refseq(remove_all_gaps=True)----command given from main file
+
+2. columns_to_remove = self.trim_by_refseq(remove_all_gaps=remove_all_gaps)---command given from get_msa_trimmed_by_refseq
+
+3. trim_by_refseq--btains columns in MSA that contain gaps more that the gap treshold
+        and do not involve residues in the best matchin sequence with reference.
+
+4. seqbackmapper = SequenceBackmapper----command given from trim_by_refseq
+
+5. SequenceBackmapper:-------Defines a sequence backmapper class. Instances of SequenceBackmapper perform
+    mapping of a reference sequence to the best matching sequence in the multiple
+    sequence alignment (MSA) data.
+
+6. fasta_reader.get_alignment_char_form---command given by SequenceBackmapper:
+
+7. reads all the files returns the sequences
+
+8. the final output is from get_msa_trimmed_by_reference -------------returns trimmed_msa-----
