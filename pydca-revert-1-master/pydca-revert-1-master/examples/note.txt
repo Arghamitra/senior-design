@@ -17,3 +17,19 @@
 7. reads all the files returns the sequences
 
 8. the final output is from get_msa_trimmed_by_reference -------------returns trimmed_msa-----
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+visualizer:
+
+1. contact_map_data = plmdca_visualizer.plot_contact_map()
+--"""Plots the contact map of an RNA or protein by calling the respective
+        methods.
+2. contact_categories_dict = self._plot_contact_map_rna()
+--"""Plots RNA contact map and returns the contact categories dict.
+3. contact_categories_dict = self.contact_categories()
+-- """Categorizes contacts to true positives, false positives, missing in
+        PDB or PDB contacts.
+4. mapped_pdb_contacts, missing_residues = self.get_mapped_pdb_contacts()
+"""Collects all resisdue contacts that are within a cut-off distance
+        as specified by self.__contact_dist parameter
+5.
+
