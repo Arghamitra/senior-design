@@ -13,7 +13,9 @@ from fdca_helper import *
                                 ####### the main function started ########
 
 name = 'combined_MSA_ddi_3_PF10417_PF00085_result'
+#name = 'output_new.txt'
 lend1, lend2 = 40, 104
+#lend1, lend2 = 161, 65
 dca_matrix = create_dca_matrix(name, lend1, lend2, option=True)
 
 
