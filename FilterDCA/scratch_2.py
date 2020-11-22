@@ -10,8 +10,8 @@ import sklearn
 
 
 def generate_dca_matrix(pic_opt=True):
-    name = 'combined_MSA_ddi_3_PF10417_PF00085_result'
-    lend1, lend2 = 40, 104
+    name = 'SPECIAL.txt'
+    lend1, lend2 = 65, 160
     dca_matrix = create_dca_matrix(name, lend1, lend2, option=pic_opt)
     return dca_matrix, name, lend1, lend2
 
@@ -46,7 +46,7 @@ def pattern_comp():  ## load the 6 filters of the selected size
     probability = clf.predict_proba(X)[:, 1]
     df['proba contact'] = probability
 
-    contact = probability > 0.3
+    contact = probability > 0.6
     plt.figure(2)
     plt.imshow(contact.reshape(dca_matrix.shape))
     plt.title('Predicted contact map')

@@ -12,10 +12,10 @@ from fdca_helper import *
 
                                 ####### the main function started ########
 
-name = 'combined_MSA_ddi_3_PF10417_PF00085_result'
+name = 'SPECIAL.txt'
 #name = 'output_new.txt'
-lend1, lend2 = 40, 104
-#lend1, lend2 = 161, 65
+#lend1, lend2 = 40, 104
+lend1, lend2 = 65, 160
 dca_matrix = create_dca_matrix(name, lend1, lend2, option=True)
 
 
@@ -51,7 +51,7 @@ plt.title('Probability of being a contact')
 plt.colorbar()
 plt.show()
 
-contact = probability > 0.3
+contact = probability > 0.5
 plt.imshow(contact.reshape(dca_matrix.shape))
 plt.title('Predicted contact map')
 plt.show()
