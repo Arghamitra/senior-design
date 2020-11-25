@@ -20,7 +20,7 @@ def create_dca_matrix(name, len_d1, len_d2, option=True):
         #plt.figure()
         plt.imshow(matrix)  # plots the matrix\
         plt.savefig("pattern_comp")
-        #plt.show()
+        plt.show()
         #plt.close()
     return matrix
 

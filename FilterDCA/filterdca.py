@@ -46,15 +46,36 @@ X = np.array(df[column])
 probability = clf.predict_proba(X)[:, 1]
 df['proba contact'] = probability
 
+def print_mat(matrix):
+    print('\n')
+    for vec in matrix:
+        line = ''
+        for num in vec:
+            line+=str(num) + ','
+        print(line)
+
+        """"
+    for i in range(0, len(matrix)):
+        list = matrix[i]
+        for j in range(0, len(list)):
+            print(',',matrix[i][j])
+            """
+
 plt.imshow(probability.reshape(dca_matrix.shape))
 plt.title('Probability of being a contact')
 plt.colorbar()
 plt.show()
 
+
 contact = probability > 0.5
 plt.imshow(contact.reshape(dca_matrix.shape))
+#print(dca_matrix)
 plt.title('Predicted contact map')
 plt.show()
+print_mat(dca_matrix)
+
+
+
 
 ## to save results
 df.to_csv('results.dat', index=False)
