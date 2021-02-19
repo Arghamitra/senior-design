@@ -8,13 +8,13 @@ def convertToMatrix(sqnc):
     matrix_1 = np.array(sqnc).reshape((30,40))
     return matrix_1
 
-def multiple_matrix(sqnc_num):
+def multiple_matrix(sqnc_num, file_num):
     trimester = time.strftime("_%Y_%m_%d-%H__%M_%S")
     matrices = []
     for sqnc in sqnc_num:
         matrix_1 = convertToMatrix(sqnc)
         matrices.append(matrix_1)
-    np.save('TRAINING_negatives'+trimester, matrices)
+    np.save('TEST_MID_negatives'+file_num+trimester, matrices)
 
 
 def convert_sqnc_to_num(sequence):
@@ -35,14 +35,16 @@ def convert_sqnc_to_num(sequence):
     return (sqnc_num)
 
 def extract_sequence(str_to_sqnc_dic, data_A, data_B):
-    sequence = []
+    sequenceA = []
+    sequenceB = []
     length = []
     for A, B in zip(data_A, data_B):
         sqnc_A = str_to_sqnc_dic[A]
         sqnc_B = str_to_sqnc_dic[B]
-        sequence.append(sqnc_A+sqnc_B)
-        length.append(len(sqnc_A+sqnc_B))
-    return (sequence, max(length))
+        sequenceA.append(sqnc_A)
+        sequenceB.append(sqnc_B)
+        length.append(len(sqnc_A + sqnc_B))
+    return (sequenceA, sequenceB, max(length))
 
 
 
@@ -76,14 +78,16 @@ def open_file(filename, sqnc_filename):
     lines = text_file.readlines()
     data_A, data_B = extract_id(lines)
     str_to_sqnc_dic = open_sqnc_file(sqnc_filename)
-    sequence, max_len = extract_sequence(str_to_sqnc_dic, data_A, data_B)
-    sqnc_num = convert_sqnc_to_num(sequence)
-    multiple_matrix(sqnc_num)
+    sequenceA, sequenceB, max_len = extract_sequence(str_to_sqnc_dic, data_A, data_B)
+    sqnc_numA = convert_sqnc_to_num(sequenceA)
+    sqnc_numB = convert_sqnc_to_num(sequenceB)
+    multiple_matrix(sqnc_numA, file_num = 'A')
+    multiple_matrix(sqnc_numB, file_num = 'B')
 
 
 def main():
-    filename = "/home/at/work/ECEN_404/vector_machine_data/TRAINING/TRAINING_negatives.txt"
-    sqnc_filename = "/home/at/work/ECEN_404/vector_machine_data/sequences.fasta"
+    filename = "/home/at/work/dataset/ECEN_404_dataset/vector_machine_data/MID_HARD/TEST_MID_HARD_negatives.txt"
+    sqnc_filename = "/home/at/work/dataset/ECEN_404_dataset/vector_machine_data/sequences.fasta"
     open_file(filename, sqnc_filename )
     print("DONE")
 
