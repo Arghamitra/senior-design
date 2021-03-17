@@ -106,7 +106,7 @@ def extract_sequence(proA_links, proB_link ):
             data_A.append(link_A.read())
             data_B.append(link_B.read())
         except:
-            print("Error found to open link:", x)
+            ("Error found to open link:", x)
         x = x + 1
     return data_A, data_B
     #print("Hello from a function")

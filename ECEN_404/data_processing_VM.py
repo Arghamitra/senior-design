@@ -3,11 +3,13 @@
 import numpy as np
 import time
 
+#the formation of individual matrix
 def convertToMatrix(sqnc):
     sqnc = sqnc+[0]*(1200-len(sqnc))
     matrix_1 = np.array(sqnc).reshape((30,40))
     return matrix_1
 
+#from all protiens it makes matrix
 def multiple_matrix(sqnc_num, file_num):
     trimester = time.strftime("_%Y_%m_%d-%H__%M_%S")
     matrices = []
@@ -16,7 +18,7 @@ def multiple_matrix(sqnc_num, file_num):
         matrices.append(matrix_1)
     np.save('TEST_MID_negatives'+file_num+trimester, matrices)
 
-
+#converts sequence to number from the dictionary
 def convert_sqnc_to_num(sequence):
     sqnc_num = []
     index_aa = {0: 'X', 1: '_GO', 2: '_EOS', 3: '_UNK', 4: 'A', 5: 'R', 6: 'N', 7: 'D', 8: 'C', 9: 'Q', 10: 'E',
@@ -47,7 +49,7 @@ def extract_sequence(str_to_sqnc_dic, data_A, data_B):
     return (sequenceA, sequenceB, max(length))
 
 
-
+#opens the file where we have all the sequences
 def open_sqnc_file(sqnc_filename):
     print("extract sequence")
     str_to_sqnc_dic = {}
@@ -63,6 +65,7 @@ def open_sqnc_file(sqnc_filename):
             i+=1
     return str_to_sqnc_dic
 
+#extract protein id from text file
 def extract_id(lines):
     print("id")
     data_A = []

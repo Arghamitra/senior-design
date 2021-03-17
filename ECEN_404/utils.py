@@ -61,32 +61,45 @@ def load_train_data(data_processed_dir):
     prot_train_inter_exist = np.load(data_processed_dir+'prot_train_inter_exist.npy')
     IC50_train = np.load(data_processed_dir+'IC50_train.npy')
     return protein_train, compound_train_ver, compound_train_adj, prot_train_contacts, prot_train_contacts_true, prot_train_inter, prot_train_inter_exist, IC50_train
-
-    protein_P_A = np.load(data_processed_dir+'TRAINING_positivesA_2021_02_11-03__48_27.npy')
-    protein_N_A = np.load(data_processed_dir+'TRAINING_negativesA_2021_02_11-03__47_32.npy')
+    """
+    protein_P_A = np.load(data_processed_dir + 'sample_positivsA.npy')
+    protein_N_A = np.load(data_processed_dir + 'sample_negativesA.npy')
+    protein_train_A = np.concatenate((protein_P_A, protein_N_A))
+    protein_P_B = np.load(data_processed_dir + 'sample_positivsB.npy')
+    protein_N_B = np.load(data_processed_dir + 'sample_negativesB.npy')
+    protein_train_B = np.concatenate((protein_P_B, protein_N_B))
+    lable_P = np.load(data_processed_dir + 'sample_positve_label.npy')
+    lable_N = np.load(data_processed_dir + 'sample_negatv_label.npy')
+    IC50_train = np.concatenate((lable_P, lable_N))
+    return protein_train_A, protein_train_B, IC50_train
+    """
+    
+    protein_P_A = np.load(data_processed_dir + 'TRAINING_positivesA_2021_02_11-03__48_27.npy')
+    protein_N_A = np.load(data_processed_dir + 'TRAINING_negativesA_2021_02_11-03__47_32.npy')
     protein_train_A = np.concatenate((protein_P_A, protein_N_A))
     protein_P_B = np.load(data_processed_dir + 'TRAINING_positivesB_2021_02_11-03__48_27.npy')
     protein_N_B = np.load(data_processed_dir + 'TRAINING_negativesB_2021_02_11-03__47_32.npy')
     protein_train_B = np.concatenate((protein_P_B, protein_N_B))
     lable_P = np.load(data_processed_dir + 'TRAINING_positive_label.npy')
     lable_N = np.load(data_processed_dir + 'TRAINING_negative_label.npy')
-    IC50_train = np.concatenate((lable_P,lable_N))
-    return protein_train_A, protein_train_B, IC50_train
-    """
-    protein_P_A = np.load(data_processed_dir + 'TEST_MID_positivesA_2021_02_14-23__18_26.npy')
-    protein_N_A = np.load(data_processed_dir + 'TEST_MID_negativesA_2021_02_14-23__19_16.npy')
-    protein_train_A = np.concatenate((protein_P_A, protein_N_A))
-    protein_P_B = np.load(data_processed_dir + 'TEST_MID_positivesB_2021_02_14-23__18_26.npy')
-    protein_N_B = np.load(data_processed_dir + 'TEST_MID_negativesB_2021_02_14-23__19_16.npy')
-    protein_train_B = np.concatenate((protein_P_B, protein_N_B))
-    lable_P = np.load(data_processed_dir + 'TEST_positive_label.npy')
-    lable_N = np.load(data_processed_dir + 'TEST_negative_label.npy')
     IC50_train = np.concatenate((lable_P, lable_N))
     return protein_train_A, protein_train_B, IC50_train
-
+    """ 
 
 def load_val_data(data_processed_dir):
 
+    protein_P_A = np.load(data_processed_dir + 'sample_positivsA.npy')
+    protein_N_A = np.load(data_processed_dir + 'sample_negativesA.npy')
+    protein_train_A = np.concatenate((protein_P_A, protein_N_A))
+    protein_P_B = np.load(data_processed_dir + 'sample_positivsB.npy')
+    protein_N_B = np.load(data_processed_dir + 'sample_negativesB.npy')
+    protein_train_B = np.concatenate((protein_P_B, protein_N_B))
+    lable_P = np.load(data_processed_dir + 'sample_positve_label.npy')
+    lable_N = np.load(data_processed_dir + 'sample_negatv_label.npy')
+    IC50_train = np.concatenate((lable_P, lable_N))
+    return protein_train_A, protein_train_B, IC50_train
+    
+    """
     protein_P_A = np.load(data_processed_dir + 'VAL_EASY_positivesA_2021_02_11-03__51_58.npy')
     protein_N_A = np.load(data_processed_dir + 'VAL_EASY_negativesA_2021_02_11-03__51_26.npy')
     protein_train_A = np.concatenate((protein_P_A, protein_N_A))
@@ -98,7 +111,7 @@ def load_val_data(data_processed_dir):
     IC50_train = np.concatenate((lable_P, lable_N))
     return protein_train_A, protein_train_B, IC50_train
 
-"""
+
     protein_dev = np.load(data_processed_dir+'protein_dev.npy')
     compound_dev_ver = np.load(data_processed_dir+'compound_dev_ver.npy')
     compound_dev_adj = np.load(data_processed_dir+'compound_dev_adj.npy')
@@ -272,10 +285,13 @@ import torch
 def cal_affinity_torch(model, loader, logging=False, logpath=''):
     y_pred, labels = np.zeros(len(loader.dataset)), np.zeros(len(loader.dataset))
     batch = 0
-    for prot_data, drug_data_ver, drug_data_adj, prot_contacts, prot_inter, prot_inter_exist, label in loader:
-        prot_data, drug_data_ver, drug_data_adj, prot_contacts, prot_inter, prot_inter_exist, label = prot_data.cuda(), drug_data_ver.cuda(), drug_data_adj.cuda(), prot_contacts.cuda(), prot_inter.cuda(), prot_inter_exist.cuda(), label.cuda()
+    #for prot_data, drug_data_ver, drug_data_adj, prot_contacts, prot_inter, prot_inter_exist, label in loader:
+        #prot_data, drug_data_ver, drug_data_adj, prot_contacts, prot_inter, prot_inter_exist, label = prot_data.cuda(), drug_data_ver.cuda(), drug_data_adj.cuda(), prot_contacts.cuda(), prot_inter.cuda(), prot_inter_exist.cuda(), label.cuda()
+    for prot_data1, prot_data2,label in loader:
+        prot_data1, prot_data2,label= prot_data1.cuda(), prot_data2.cuda(),label.cuda()
         with torch.no_grad():
-            _, affn = model.forward_inter_affn(prot_data, drug_data_ver, drug_data_adj, prot_contacts)
+            #_, affn = model.forward_inter_affn(prot_data, drug_data_ver, drug_data_adj, prot_contacts)
+            _, affn = model.forward_inter_affn(prot_data1, prot_data2)
 
         if batch != len(loader.dataset) // 32:
             labels[batch*32:(batch+1)*32] = label.squeeze().cpu().numpy()
