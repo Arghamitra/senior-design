@@ -28,7 +28,7 @@ def multiple_matrix(sqnc_num, file_num, offset):
 # converts sequence to number from the dictionary
 def convert_sqnc_to_num(sequence):
     sqnc_num = []
-    index_aa = {0: 'X', 1: '_GO', 2: '_EOS', 3: '_UNK', 4: 'A', 5: 'R', 6: 'N', 7: 'D', 8: 'C', 9: 'Q', 10: 'E',
+    index_aa = {24: 'X', 1: '_GO', 2: '_EOS', 3: '_UNK', 4: 'A', 5: 'R', 6: 'N', 7: 'D', 8: 'C', 9: 'Q', 10: 'E',
                 11: 'G', 12: 'H', 13: 'I', 14: 'L', 15: 'K', 16: 'M', 17: 'F', 18: 'P', 19: 'S', 20: 'T', 21: 'W',
                 22: 'Y', 23: 'V'}
     rvrs_index_aa = dict()
@@ -102,7 +102,7 @@ def open_file(file_npy, sqnc_filename):
 
 
 def main():
-    file_npy = np.load("Val_intrctn_list.npy")
+    file_npy = np.load("/home/argha/WORK/extracted_data/extracted_data/2D_data/final_data/Val_intrctn_listF.npy")
     sqnc_filename = "/home/argha/WORK/extracted_data/extracted_data/all_seq.fasta"
     # filename = "/home/at/work/dataset/ECEN_404_dataset/vector_machine_data/MID_HARD/TEST_MID_HARD_negatives.txt"
     # sqnc_filename = "/home/at/work/dataset/ECEN_404_dataset/vector_machine_data/sequences.fasta"

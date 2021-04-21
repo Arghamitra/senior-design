@@ -38,15 +38,6 @@ def open_file(filename, sqnc_filename):
     #np_save(train_set, test_set, val_set)
     return data_touple
 
-def find_match(main_file, new_file):
-
-    #i = set(new_file).issubset(set(main_file))
-    for nw_element in new_file:
-        for main_elemnt in main_file:
-            if (nw_element == main_elemnt):
-                i =+1
-    print (i)
-
 
 
 def main():
@@ -58,7 +49,6 @@ def main():
     #sqnc_filename = "/home/at/work/dataset/ECEN_404_dataset/vector_machine_data/sequences.fasta"
 
     data_touple = open_file(filename, sqnc_filename )
-    find_match((file_npy), data_touple)
     print("DONE")
 
 
