@@ -11,8 +11,8 @@ def make_label(label, length):
 
 
 
-TEST_HARD_P = make_label(1, len(np.load('/home/argha/WORK/extracted_data/extracted_data/2D_data/final_data/Test_sqnc_A_2021_04_07-16__19_46.npy')))
-TEST_HARD_N = make_label(1, len(np.load('/home/argha/WORK/extracted_data/extracted_data/2D_data/final_data/VAL_sqnc_A_2021_04_06-02__53_12.npy')))
+TEST_HARD_P = make_label(1, len(np.load('train_sqnc_A_2021_04_22-22__03_26.npy')))
+#TEST_HARD_N = make_label(1, len(np.load('val_sqnc_A_2021_04_22-22__02_21.npy')))
 
-save_np_file('test_sqnc_lbl', TEST_HARD_P)
-save_np_file('val_sqnc_lbl', TEST_HARD_N)
+save_np_file('train_sqnc_lbl', TEST_HARD_P)
+#save_np_file('val_sqnc_lbl', TEST_HARD_N)

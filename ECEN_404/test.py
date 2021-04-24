@@ -1,3 +1,36 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import colors
+from matplotlib.ticker import PercentFormatter
+
+# Fixing random state for reproducibility
+np.random.seed(19680801)
+
+N_points = 100000
+n_bins = 20
+
+# Generate a normal distribution, center at x=0 and y=5
+x = np.random.randn(N_points)
+y = .4 * x + np.random.randn(100000) + 5
+
+fig, axs = plt.subplots(1, 2, sharey=True, tight_layout=True)
+
+# We can set the number of bins with the `bins` kwarg
+axs[0].hist(x, bins=n_bins)
+axs[1].hist(y, bins=n_bins)
+plt.show()
+
+""""reads lines and returns a fasta link from the uniprod id"""
+x = 'P38276'
+y = 'P38276'
+
+
+labels =[[1,2,3],[4,5,6]]
+matrix_1 = np.array(labels).reshape((2,3))
+trth = matrix_1.reshape(3 * 2)
+
+
 #list1 = ['1', '2', '3', '4']
 
 s = ""
@@ -13,7 +46,16 @@ from random import seed
 import random as rand
 from sklearn.metrics import roc_curve, auc, average_precision_score
 
+file1 = open("myfile.txt","w")
+L = ["This is Delhi \n","This is Paris \n","This is London \n"]
+file1.write(L)
+file1.close()
 
+
+data1 = np.load('Intra_train_A.npy')
+i=2
+
+"""
 n = 4
 a = [[rand.randint(0, 10) for _ in range(n)] for _ in range(n)]
 a = np.array(a).reshape(2, 8)
@@ -122,8 +164,6 @@ for x in range(4):
 sample_contact_map = np.array(sample_contact_map)
 np.save('sample_contact_map', sample_contact_map)
 
-
-"""
 #
 num_homo_neg = 0
 data1 = np.load('/home/argha/WORK/extracted_data/ctmaps/ctmap_1a4y_P03950_P13489.npy')

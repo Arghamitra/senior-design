@@ -14,14 +14,15 @@ parser.add_argument('--l0', type=float, default=0.01)
 parser.add_argument('--l1', type=float, default=0.01)
 parser.add_argument('--l2', type=float, default=0.0001)
 parser.add_argument('--l3', type=float, default=1000.0)
-parser.add_argument('--batch_size', type=int, default=4)
+parser.add_argument('--batch_size', type=int, default=2)
 parser.add_argument('--epoch', type=int, default = 2)
 parser.add_argument('--train', type=int, default= 0)
 parser.add_argument('--resume', type=int, default= 0)
 #/home/argha/WORK/extracted_data/vector_machine_data/
 #/home/arghamitra.talukder/ecen_404/extracted_data/final_data/
+#/scratch/user/arghamitra.talukder/extracted_data_PPI_Xmodality/final_data_2d/
 
-parser.add_argument('--data_processed_dir', type=str, default='/scratch/user/arghamitra.talukder/extracted_data_PPI_Xmodality/final_data_2d/')
+parser.add_argument('--data_processed_dir', type=str, default='/home/argha/WORK/extracted_data/extracted_data/final_data_2D/')
 args = parser.parse_args()
 print(args)
 step_size = 1e-3
@@ -64,7 +65,65 @@ class net_crossInteraction(nn.Module):
         self.lambda_l1, self.lambda_fused, self.lambda_group = lambda_l1, lambda_fused, lambda_group
         self.lambda_bind = lambda_bind
 
+    # finds out the real length of protein without padding
+    def find_pro_len(self, protein):
+        length = []
+        b, i, j = protein.size()
+
+        # from matrix convert in to a 1d array to find out the length of the sequence
+        protein_array = protein.cpu().detach().numpy()
+        protein_array = protein_array.reshape(b * i, j)
+        protein_array = protein_array.reshape(b * j, i)
+        protein_array = protein_array.reshape(b, i * j)
+
+        # for each protein in the batch it removes all 0 or padding and finds out real length
+        for ix in range(np.shape(protein_array)[0]):
+            pro = protein_array[ix]
+            pro = pro[pro != 0]
+            length.append(len(pro.tolist()))
+
+        return length
+
+    def padding_masking(self, INTER_predctn, len_prot_data1, len_prot_data2):
+
+        # make an empty tensor to append all contact maps in batch size
+        inter_prot_prot_masked = torch.empty(INTER_predctn.size()[1], INTER_predctn.size()[1])
+        inter_prot_prot_masked = inter_prot_prot_masked.cuda()
+
+        # loop goes for each contact map in batch
+        for ix in range(len(len_prot_data1)):
+            contact_map = INTER_predctn[ix]
+
+            # a 1d tensor which has all 1 == length of protein 1, rest 0
+            vector1 = []
+            vector1 = vector1 + [1] * (len_prot_data1[ix])
+            vector1 = vector1 + [0] * (contact_map.size()[0] - len_prot_data1[ix])
+            prot_mask1 = torch.tensor(np.array(vector1))
+            prot_mask1 = prot_mask1.cuda()
+
+            # a 1d tensor which has all 1 == length of protein 2, rest 0
+            vector2 = []
+            vector2 = vector2 + [1] * (len_prot_data2[ix])
+            vector2 = vector2 + [0] * (contact_map.size()[0] - len_prot_data2[ix])
+            prot_mask2 = torch.tensor(np.array(vector2))
+            prot_mask2 = prot_mask2.cuda()
+
+            # multiplication with the vectors with contact map
+            contact_map = torch.einsum('ij,i,j->ij', contact_map, prot_mask1, prot_mask2)
+
+            # append all contact maps
+            if (ix == 0):
+                inter_prot_prot_masked = torch.cat([contact_map.unsqueeze(0)], dim=0)
+            else:
+                inter_prot_prot_masked = torch.cat([inter_prot_prot_masked, contact_map.unsqueeze(0)], dim=0)
+        return inter_prot_prot_masked
+
     def forward(self, prot_data1, prot_data2, label):
+
+        # finds out the length of each protein sequenc in a batch without padding
+        len_prot_data1 = self.find_pro_len(prot_data1)
+        len_prot_data2 = self.find_pro_len(prot_data2)
+
         # protein embedding 1
         #print("after entering into model",prot_data1.size())
         aminoAcid_embedding1 = self.mod_aminoAcid_embedding(prot_data1)
@@ -134,6 +193,11 @@ class net_crossInteraction(nn.Module):
         return loss
 
     def forward_inter_affn(self, prot_data1, prot_data2):
+
+        # finds out the length of each protein sequenc in a batch without padding
+        len_prot_data1 = self.find_pro_len(prot_data1)
+        len_prot_data2 = self.find_pro_len(prot_data2)
+
         # protein embedding 1
         aminoAcid_embedding1 = self.mod_aminoAcid_embedding(prot_data1)
 
@@ -176,18 +240,22 @@ class net_crossInteraction(nn.Module):
         inter_prot_prot_sum = torch.einsum('bij->b', inter_prot_prot)
         inter_prot_prot = torch.einsum('bij,b->bij', inter_prot_prot, 1/inter_prot_prot_sum)
 
+        # INTER contact map masking according protein 1 length and protein 2 length
+        inter_prot_prot_masked = self.padding_masking(inter_prot_prot, len_prot_data1, len_prot_data2)
+
         # protein-protein joint embedding
         #print("affn_before joint emdessing",prot_embedding2.size())
-        pp_embedding = self.tanh(torch.einsum('bij,bkj->bikj', prot_embedding1, prot_embedding2))
-        pp_embedding = torch.einsum('bijk,bij->bk', pp_embedding, inter_prot_prot)
+        #pp_embedding = self.tanh(torch.einsum('bij,bkj->bikj', prot_embedding1, prot_embedding2))
+        #pp_embedding = torch.einsum('bijk,bij->bk', pp_embedding, inter_prot_prot)
 
         # protein-protein affinity
-        affn_prot_prot = pp_embedding[:, None, :]
-        affn_prot_prot = self.regressor0(affn_prot_prot)
-        affn_prot_prot = affn_prot_prot.view(b, 64*16)
-        affn_prot_prot = self.regressor1(affn_prot_prot)
+        #affn_prot_prot = pp_embedding[:, None, :]
+        #affn_prot_prot = self.regressor0(affn_prot_prot)
+        #affn_prot_prot = affn_prot_prot.view(b, 64*16)
+        #affn_prot_prot = self.regressor1(affn_prot_prot)
+        affn_prot_prot = inter_prot_prot
 
-        return inter_prot_prot, affn_prot_prot
+        return inter_prot_prot_masked, affn_prot_prot, len_prot_data1, len_prot_data2
 
     #def loss_reg(self, inter, fused_matrix):
     def loss_reg(self, inter):
@@ -369,7 +437,7 @@ val_set = dataset('val')
 val_loader = torch.utils.data.DataLoader(dataset=val_set, batch_size=args.batch_size, shuffle=False)
 
 model = net_crossInteraction(args.l0, args.l1, args.l2, args.l3)
-model = nn.DataParallel(model)
+#model = nn.DataParallel(model)
 model = model.cuda()
 
 
@@ -398,7 +466,7 @@ def calculate_AUPRC(model,loader, batch_size, logging=False, logpath=''):
             INTRA_prot_contact1.cuda(), INTRA_prot_contact2.cuda()
         with torch.no_grad():
             # _, affn = model.forward_inter_affn(prot_data, drug_data_ver, drug_data_adj, prot_contacts)
-            _, affn = model.forward_inter_affn(prot_data1, prot_data2)
+            _, affn, len_prot_data1, len_prot_data2 = model.forward_inter_affn(prot_data1, prot_data2)
 
         if batch != len(loader.dataset) // batch_size:
             labels[batch * batch_size:(batch + 1) * batch_size] = label.squeeze().cpu().numpy()
@@ -526,7 +594,7 @@ data_processed_dir = args.data_processed_dir
 print('train')
 eval_set = dataset('train')
 eval_loader = torch.utils.data.DataLoader(dataset=eval_set, batch_size=args.batch_size, shuffle=False)
-cal_affinity_torch(model, eval_loader, (args.batch_size),task=3)
+cal_affinity_torch(model, eval_loader, (args.batch_size),eval_phs = "TRAIN", task=3)
 #prot_length1 = np.load(data_processed_dir+'prot_train_length1.npy')
 #prot_length2 = np.load(data_processed_dir+'prot_train_length2.npy')
 #cal_interaction_torch(model, eval_loader, prot_length1, prot_length2)
@@ -534,13 +602,13 @@ cal_affinity_torch(model, eval_loader, (args.batch_size),task=3)
 print('test')
 eval_set = dataset('test')
 eval_loader = torch.utils.data.DataLoader(dataset=eval_set, batch_size=args.batch_size, shuffle=False)
-cal_affinity_torch(model, eval_loader, (args.batch_size),task=3)
+cal_affinity_torch(model, eval_loader, (args.batch_size),eval_phs = "TEST", task=3)
 
 
 print('val')
 eval_set = dataset('val')
 eval_loader = torch.utils.data.DataLoader(dataset=eval_set, batch_size=args.batch_size, shuffle=False)
-cal_affinity_torch(model, eval_loader, (args.batch_size),task=3)
+cal_affinity_torch(model, eval_loader, (args.batch_size),eval_phs = "VAL", task=3)
 #prot_length1 = np.load(data_processed_dir+'prot_dev_length1.npy')
 #prot_length2 = np.load(data_processed_dir+'prot_dev_length2.npy')
 #cal_interaction_torch(model, eval_loader, prot_length1, prot_length2)

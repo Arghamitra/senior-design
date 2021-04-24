@@ -23,15 +23,15 @@ parser.add_argument('--l0', type=float, default=0.01)
 parser.add_argument('--l1', type=float, default= 0.001)
 parser.add_argument('--l2', type=float, default=0.0001)
 parser.add_argument('--l3', type=float, default=1000.0)
-parser.add_argument('--batch_size', type=int, default=4)
+parser.add_argument('--batch_size', type=int, default=2)
 parser.add_argument('--epoch', type=int, default=500)
-parser.add_argument('--train', type=int, default=0)
+parser.add_argument('--train', type=int, default=1)
 parser.add_argument('--resume', type=int, default=0)
 # /home/argha/WORK/extracted_data/vector_machine_data/
 # /home/arghamitra.talukder/ecen_404/extracted_data/final_data/
 #/home/argha/WORK/extracted_data/extracted_data/2D_data/final_data/
 
-parser.add_argument('--data_processed_dir', type=str, default=('/scratch/user/arghamitra.talukder/extracted_data_PPI_Xmodality/final_data_2d/'))
+parser.add_argument('--data_processed_dir', type=str, default=('/home/argha/WORK/extracted_data/extracted_data/final_data_2D/'))
 args = parser.parse_args()
 print(args)
 step_size = 1e-3
@@ -202,6 +202,7 @@ class net_crossInteraction(nn.Module):
 
         #INTER contact map masking according protein 1 length and protein 2 length
         inter_prot_prot_masked = self.padding_masking(inter_prot_prot, len_prot_data1, len_prot_data2)
+        """
 
         pp_embedding = self.tanh(torch.einsum('bij,bkj->bikj', prot_embedding1, prot_embedding2))
         pp_embedding = torch.einsum('bijk,bij->bk', pp_embedding, inter_prot_prot)
@@ -213,7 +214,7 @@ class net_crossInteraction(nn.Module):
         affn_prot_prot = affn_prot_prot.view(b, affn_prot_prot.size()[1] * affn_prot_prot.size()[2])
         affn_prot_prot = self.regressor1_n(affn_prot_prot)
 
-        """
+        
         loss0, loss1 = self.loss_reg(inter_prot_prot, fused_matrix.to(inter_prot_prot.device)), self.loss_affn(affn_prot_prot, label)
         loss0, loss1 = self.loss_reg(inter_prot_prot), self.loss_affn(
         affn_prot_prot, label)
@@ -269,7 +270,7 @@ class net_crossInteraction(nn.Module):
 
         # INTER contact map masking according protein 1 length and protein 2 length
         inter_prot_prot_masked = self.padding_masking(inter_prot_prot, len_prot_data1, len_prot_data2)
-
+        """
         pp_embedding = self.tanh(torch.einsum('bij,bkj->bikj', prot_embedding1, prot_embedding2))
         pp_embedding = torch.einsum('bijk,bij->bk', pp_embedding, inter_prot_prot)
 
@@ -279,8 +280,10 @@ class net_crossInteraction(nn.Module):
         # affn_prot_prot = affn_prot_prot.view(b, 64*32)
         affn_prot_prot = affn_prot_prot.view(b, affn_prot_prot.size()[1] * affn_prot_prot.size()[2])
         affn_prot_prot = self.regressor1_n(affn_prot_prot)
+        """
+        affn_prot_prot = inter_prot_prot
 
-        return inter_prot_prot_masked, affn_prot_prot  
+        return inter_prot_prot_masked, affn_prot_prot, len_prot_data1, len_prot_data2
 
     # def loss_reg(self, inter, fused_matrix):
     def loss_reg(self, inter):
@@ -491,6 +494,8 @@ model = nn.DataParallel(model)
 optimizer = torch.optim.Adam(model.parameters(), step_size)  # step size
 
 def calculate_AUPRC(model,loader, batch_size, logging=False, logpath=''):
+    len_prot_data1 = []
+    len_prot_data2 = []
     row = loader.dataset.prot_data1.size()[1]
     colmn = loader.dataset.prot_data1.size()[2]
     y_pred= np.zeros((len(loader.dataset), row*colmn, row*colmn))
@@ -508,7 +513,7 @@ def calculate_AUPRC(model,loader, batch_size, logging=False, logpath=''):
 
         with torch.no_grad():
             # _, affn = model.forward_inter_affn(prot_data, drug_data_ver, drug_data_adj, prot_contacts)
-            inter, _  = model.module.forward_inter_affn(prot_data1, prot_data2)
+            inter, _ , Len_prot_data1, Len_prot_data2 = model.module.forward_inter_affn(prot_data1, prot_data2)
 
         if batch != len(loader.dataset) // batch_size:
             labels[batch * batch_size:(batch + 1) * batch_size] = INTER_prot_contact.squeeze().cpu().numpy()
@@ -521,6 +526,10 @@ def calculate_AUPRC(model,loader, batch_size, logging=False, logpath=''):
             y_pred[batch * batch_size:] = inter.squeeze().detach().cpu().numpy()
             # labels[batch*16:] = label.squeeze().cpu().numpy()
             # y_pred[batch*16:] = affn.squeeze().detach().cpu().numpy()
+
+        for ll in range(len(Len_prot_data2)):
+            len_prot_data1.append(Len_prot_data1[ll])
+            len_prot_data2.append(Len_prot_data2[ll])
 
         batch += 1
 
@@ -538,14 +547,14 @@ def calculate_AUPRC(model,loader, batch_size, logging=False, logpath=''):
     i = row * colmn
     j = colmn * row
     
-    """
+
     for ix in range (int(b/2)):
         trth = labels[ix]
-        trth = trth[:len_prot_data2[ix], :len_prot_data1[ix] ]
+        trth = trth[:len_prot_data1[ix], :len_prot_data2[ix] ]
         trth = trth.reshape(len_prot_data2[ix] * len_prot_data1[ix])
 
         pred = y_pred[ix]
-        pred = pred[:len_prot_data2[ix], :len_prot_data1[ix]]
+        pred = pred[:len_prot_data1[ix], :len_prot_data2[ix]]
         pred = pred.reshape (len_prot_data2[ix] * len_prot_data1[ix])
 
         average_precision_whole = average_precision_score(trth, pred)
@@ -568,13 +577,6 @@ def calculate_AUPRC(model,loader, batch_size, logging=False, logpath=''):
     fpr_whole, tpr_whole, _ = roc_curve(labels, y_pred)
     roc_auc_whole = auc(fpr_whole, tpr_whole)
     AUC.append(roc_auc_whole)
-    """
-        for ix in range(np.shape(labels)[0]):
-        average_precision_whole = average_precision_score(labels[ix], y_pred[ix])
-        AP.append(average_precision_whole)
-        fpr_whole, tpr_whole, _ = roc_curve(labels[ix], y_pred[ix])
-        roc_auc_whole = auc(fpr_whole, tpr_whole)
-        AUC.append(roc_auc_whole)
     """
 
     print('interaction auprc', np.mean(AP), 'auroc', np.mean(AUC))
@@ -670,7 +672,7 @@ data_processed_dir = args.data_processed_dir
 print('train')
 eval_set = dataset('train')
 eval_loader = torch.utils.data.DataLoader(dataset=eval_set, batch_size=args.batch_size, shuffle=False)
-cal_affinity_torch(model, eval_loader,(args.batch_size), task =3)
+cal_affinity_torch(model, eval_loader,(args.batch_size), eval_phs = "TRAIN", task =3)
 # prot_length1 = np.load(data_processed_dir+'prot_train_length1.npy')
 # prot_length2 = np.load(data_processed_dir+'prot_train_length2.npy')
 # cal_interaction_torch(model, eval_loader, prot_length1, prot_length2)
@@ -678,12 +680,12 @@ cal_affinity_torch(model, eval_loader,(args.batch_size), task =3)
 print('test')
 eval_set = dataset('test')
 eval_loader = torch.utils.data.DataLoader(dataset=eval_set, batch_size=args.batch_size, shuffle=False)
-cal_affinity_torch(model, eval_loader, (args.batch_size), task =3)
+cal_affinity_torch(model, eval_loader, (args.batch_size), eval_phs = "TEST", task =3)
 
 print('val')
 eval_set = dataset('val')
 eval_loader = torch.utils.data.DataLoader(dataset=eval_set, batch_size=args.batch_size, shuffle=False)
-cal_affinity_torch(model, eval_loader,(args.batch_size), task =3)
+cal_affinity_torch(model, eval_loader,(args.batch_size), eval_phs = "VAL", task =3)
 # prot_length1 = np.load(data_processed_dir+'prot_dev_length1.npy')
 # prot_length2 = np.load(data_processed_dir+'prot_dev_length2.npy')
 # cal_interaction_torch(model, eval_loader, prot_length1, prot_length2)

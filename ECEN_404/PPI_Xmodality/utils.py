@@ -54,14 +54,15 @@ comp_max_size = 56
 
 def load_train_data(data_processed_dir):
 
-    protein_P_A = np.load(data_processed_dir + 'train_sqnc_A_2021_04_07-16__19_05.npy')
+
+    protein_P_A = np.load(data_processed_dir + 'train_sqnc_A_2021_04_22-22__03_26.npy')
     #protein_train_A = np.concatenate((protein_P_A))
-    protein_P_B = np.load(data_processed_dir + 'train_sqnc_B_2021_04_07-16__19_05.npy')
+    protein_P_B = np.load(data_processed_dir + 'train_sqnc_B_2021_04_22-22__03_26.npy')
     #protein_train_B = np.concatenate((protein_P_B))
     lable_P = np.load(data_processed_dir + 'train_sqnc_lbl.npy')
     #IC50_train = np.concatenate((lable_P))
     INTER_prot_contact = np.load(data_processed_dir + 'Train_INTER_map.npy')
-    INTRA_prot_contact1 = np.load(data_processed_dir + 'Intra_train_B.npy')
+    INTRA_prot_contact1 = np.load(data_processed_dir + 'Intra_train_A.npy')
     INTRA_prot_contact2 = np.load(data_processed_dir + 'Intra_train_B.npy')
     return protein_P_A, protein_P_B, lable_P, INTER_prot_contact, INTRA_prot_contact1, INTRA_prot_contact2
     
@@ -82,6 +83,7 @@ def load_train_data(data_processed_dir):
     INTRA_prot_contact1 = INTER_prot_contact
     INTRA_prot_contact2 = INTER_prot_contact
     return protein_train_A, protein_train_B, IC50_train, INTER_prot_contact, INTRA_prot_contact1, INTRA_prot_contact2
+    
     
     protein_P_A = np.load(data_processed_dir + 'train_sqnc_A_2021_04_07-16__19_05.npy')
     #protein_train_A = np.concatenate((protein_P_A))
@@ -171,9 +173,10 @@ def load_val_data(data_processed_dir):
     INTRA_prot_contact2 = INTER_prot_contact
     return protein_train_A, protein_train_B, IC50_train, INTER_prot_contact, INTRA_prot_contact1, INTRA_prot_contact2
     """
-    protein_P_A = np.load(data_processed_dir + 'VAL_sqnc_A_2021_04_06-02__53_12.npy')
+
+    protein_P_A = np.load(data_processed_dir + 'val_sqnc_A_2021_04_22-22__02_21.npy')
     protein_train_A = np.concatenate((protein_P_A))
-    protein_P_B = np.load(data_processed_dir + 'VAL_sqnc_B_2021_04_06-02__53_12.npy')
+    protein_P_B = np.load(data_processed_dir + 'val_sqnc_B_2021_04_22-22__02_21.npy')
     protein_train_B = np.concatenate((protein_P_B))
     lable_P = np.load(data_processed_dir + 'val_sqnc_lbl.npy')
     IC50_train = np.concatenate((lable_P))
@@ -196,6 +199,7 @@ def load_val_data(data_processed_dir):
     INTRA_prot_contact1 = INTER_prot_contact
     INTRA_prot_contact2 = INTER_prot_contact
     return protein_train_A, protein_train_B, IC50_train, INTER_prot_contact, INTRA_prot_contact1, INTRA_prot_contact2
+    
 
     protein_P_A = np.load(data_processed_dir + 'VAL_EASY_positivesA_2021_02_11-03__51_58.npy')
     protein_N_A = np.load(data_processed_dir + 'VAL_EASY_negativesA_2021_02_11-03__51_26.npy')
@@ -233,9 +237,9 @@ def load_val_data(data_processed_dir):
 
 
 def load_test_data(data_processed_dir):
-    protein_P_A = np.load(data_processed_dir + 'Test_sqnc_A_2021_04_07-16__19_46.npy')
+    protein_P_A = np.load(data_processed_dir + 'test_sqnc_A_2021_04_22-22__03_58.npy')
     protein_train_A = np.concatenate((protein_P_A))
-    protein_P_B = np.load(data_processed_dir + 'Test_sqnc_B_2021_04_07-16__19_46.npy')
+    protein_P_B = np.load(data_processed_dir + 'test_sqnc_B_2021_04_22-22__03_58.npy')
     protein_train_B = np.concatenate((protein_P_B))
     lable_P = np.load(data_processed_dir + 'test_sqnc_lbl.npy')
     IC50_train = np.concatenate((lable_P))
@@ -442,7 +446,7 @@ import torch
 #joint_attn = torch.einsum('bij,bi,bj->bij', joint_attn, prot_mask, comp_mask)
 
 
-def cal_affinity_torch(model, loader,  batch_size, task, logging=False, logpath=''):
+def cal_affinity_torch(model, loader,  batch_size, eval_phs, task, logging=False, logpath=''):
     if (task ==1):
         #loader.dataset.len
         for indices in loader:
@@ -457,7 +461,7 @@ def cal_affinity_torch(model, loader,  batch_size, task, logging=False, logpath=
                 INTRA_prot_contact1.cuda(), INTRA_prot_contact2.cuda()
             with torch.no_grad():
                 #_, affn = model.forward_inter_affn(prot_data, drug_data_ver, drug_data_adj, prot_contacts)
-                _, affn = model.forward_inter_affn(prot_data1, prot_data2)
+                _, affn, len_prot_data1, len_prot_data2= model.forward_inter_affn(prot_data1, prot_data2)
 
             if batch != len(loader.dataset) // batch_size:
                 labels[batch*batch_size:(batch+1)*batch_size] = label.squeeze().cpu().numpy()
@@ -544,16 +548,19 @@ def cal_affinity_torch(model, loader,  batch_size, task, logging=False, logpath=
         plt.ylabel('True positive rate')
         plt.grid()
         trimester = time.strftime("_%Y_%m_%d-%H__%M_%S")
-        plt.savefig('./pic/AUCPRC_task_'+task+'_' + trimester + '.png')
+        plt.savefig('./pic/AUCPRC_task_'+task+eval_phs+'_' + trimester + '.png')
 
         plt.figure(figsize=(5, 5), dpi=100)
         plt.plot(lr_recall, lr_precision, marker='.', label='Logistic')
         plt.xlabel('Sensitivity')
         plt.ylabel('Precision')
         plt.grid()
-        plt.savefig('./pic/AUC_task_'+task+'_' + trimester + '.png')
+        plt.savefig('./pic/AUC_task_'+task+eval_phs+'_' + trimester + '.png')
 
     else:
+        inter = []
+        len_prot_data1 =[]
+        len_prot_data2 = []
         row = loader.dataset.prot_data1.size()[1]
         colmn = loader.dataset.prot_data1.size()[2]
         y_pred= np.zeros((len(loader.dataset), row*colmn, row*colmn))
@@ -572,23 +579,33 @@ def cal_affinity_torch(model, loader,  batch_size, task, logging=False, logpath=
             with torch.no_grad():
                 # _, affn = model.forward_inter_affn(prot_data, drug_data_ver, drug_data_adj, prot_contacts)
                 #inter, _ = model.forward_inter_affn(prot_data1, prot_data2)
-                if (task == 3):
-                    inter, _ = model.forward_inter_affn(prot_data1, prot_data2)
+                INTER, _, Len_prot_data1, Len_prot_data2 = model.forward_inter_affn(prot_data1, prot_data2, INTRA_prot_contact1, INTRA_prot_contact2)
+                """
+                                if (task == 3):
+                    INTER, _, Len_prot_data1, Len_prot_data2= model.forward_inter_affn(prot_data1, prot_data2)
+
                 elif (task == 4):
-                    inter, _ = model.forward(prot_data1, prot_data2, INTRA_prot_contact1, INTRA_prot_contact2)
+                    INTER, _, Len_prot_data1, Len_prot_data2 = model.forward(prot_data1, prot_data2, INTRA_prot_contact1, INTRA_prot_contact2)
+
+                """
 
 
             if batch != len(loader.dataset) // batch_size:
                 labels[batch * batch_size:(batch + 1) * batch_size] = INTER_prot_contact.squeeze().cpu().numpy()
-                y_pred[batch * batch_size:(batch + 1) * batch_size] = inter.squeeze().detach().cpu().numpy()
+                y_pred[batch * batch_size:(batch + 1) * batch_size] = INTER.squeeze().detach().cpu().numpy()
                 # labels[batch*16:(batch+1)*16] = label.squeeze().cpu().numpy()
                 # y_pred[batch*16:(batch+1)*16] = affn.squeeze().detach().cpu().numpy()
 
             else:
                 labels[batch * batch_size:] = INTER_prot_contact.squeeze().cpu().numpy()
-                y_pred[batch * batch_size:] = inter.squeeze().detach().cpu().numpy()
+                y_pred[batch * batch_size:] = INTER.squeeze().detach().cpu().numpy()
                 # labels[batch*16:] = label.squeeze().cpu().numpy()
                 # y_pred[batch*16:] = affn.squeeze().detach().cpu().numpy()
+
+            inter.append(INTER)
+            for ll in range(len(Len_prot_data2)):
+                len_prot_data1.append(Len_prot_data1[ll])
+                len_prot_data2.append(Len_prot_data2[ll])
 
             batch += 1
 
@@ -602,10 +619,31 @@ def cal_affinity_torch(model, loader,  batch_size, task, logging=False, logpath=
 
         AP = []
         AUC = []
+        lr_precision = []
+        lr_recall = []
         b = len(loader.dataset)
         i = row * colmn
         j = colmn * row
 
+        for ix in range(int(b)):
+            trth = labels[ix]
+            trth = trth[:len_prot_data1[ix], :len_prot_data2[ix]]
+            trth = trth.reshape(len_prot_data1[ix] * len_prot_data2[ix])
+
+            pred = y_pred[ix]
+            pred = pred[:len_prot_data1[ix], :len_prot_data2[ix]]
+            pred = pred.reshape(len_prot_data1[ix] * len_prot_data2[ix])
+
+            average_precision_whole = average_precision_score(trth, pred)
+            #print("AUPRC", average_precision_whole)
+            AP.append(average_precision_whole)
+            fpr_whole, tpr_whole, _ = roc_curve(trth, pred)
+            roc_auc_whole = auc(fpr_whole, tpr_whole)
+            AUC.append(roc_auc_whole)
+            lr_p, lr_r, _ = precision_recall_curve(trth, pred)
+            lr_precision.append(lr_p)
+            lr_recall.append(lr_r)
+        """
         labels = labels.reshape(b * i, j)
         labels = labels.reshape(b * j, i)
         labels = labels.reshape(b* i * j)
@@ -620,6 +658,8 @@ def cal_affinity_torch(model, loader,  batch_size, task, logging=False, logpath=
         roc_auc_whole = auc(fpr_whole, tpr_whole)
         AUC.append(roc_auc_whole)
         lr_precision, lr_recall, _ = precision_recall_curve(labels, y_pred)
+        """
+
         print('interaction auprc', np.mean(AP), 'auroc', np.mean(AUC))
 
         # pdb.set_trace()
@@ -630,22 +670,23 @@ def cal_affinity_torch(model, loader,  batch_size, task, logging=False, logpath=
         #if logging:
             #with open(logpath, 'a+') as f:
                 #f.write(str(rmse) + ' ' + str(pearson) + ' ')
+        """
         plt.figure(figsize=(5, 5), dpi=100)
         plt.plot(fpr_whole, tpr_whole, label='(auc = %0.3f)' % roc_auc_whole)
         plt.xlabel('False positive rate')
         plt.ylabel('True positive rate')
         plt.grid()
         trimester = time.strftime("_%Y_%m_%d-%H__%M_%S")
-        plt.savefig('./pic/AUCPRC_HARD_' + trimester + '.png')
+        plt.savefig('./pic/AUPRC_task_'+str(task)+eval_phs+'_' + trimester + '.png')
 
         plt.figure(figsize=(5, 5), dpi=100)
         plt.plot(lr_recall, lr_precision, marker='.', label='Logistic')
         plt.xlabel('Sensitivity')
         plt.ylabel('Precision')
         plt.grid()
-        plt.savefig('./pic/AUC_HARD__' + trimester + '.png')
+        plt.savefig('./pic/AUC_task_'+str(task)+eval_phs+'_' + trimester + '.png')
 
-        """
+        
         plt.figure(figsize = (5,5), dpi =100)
         plt.plot(fpr_whole, tpr_whole, label = '(auc = %0.3f)' % roc_auc_whole)
         plt.xlabel('False positive rate')

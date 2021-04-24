@@ -87,14 +87,14 @@ def file_select(path, File_name, cntct_mp_files_path):
     INTRA_train_B = np.array(INTRA_train_B)
 
     #saves file
-    np_save(INTRA_train_A,  INTRA_train_B, setA_file = 'Intra_val_A', setB_file = 'Intra_val_B')
+    np_save(INTRA_train_A,  INTRA_train_B, setA_file = 'Intra_train_A', setB_file = 'Intra_train_B')
 
 
 
 def main():
 
     cntct_mp_files_path = '/home/argha/WORK/extracted_data/extracted_data/2D_data/INTRA_cntct_map'
-    path='/home/argha/WORK/extracted_data/extracted_data/2D_data/final_data/VAL_intrctn_listF.npy'
+    path='Train_intrctn_list.npy'
     File_name = read_file_name(cntct_mp_files_path)
     file_select(path, File_name, cntct_mp_files_path)
 

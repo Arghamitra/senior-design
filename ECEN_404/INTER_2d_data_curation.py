@@ -36,20 +36,24 @@ def make_final_matrix(matrix, proA, proB, str_to_sqnc_dic):
     else:
         matrix_1 = matrix[lenA:, :(lenA)]
 
+    matrix_1 = matrix_1.transpose()
+    padded_matrix = np.zeros((1000, 1000))
+    padded_matrix[:matrix_1.shape[0], :matrix_1.shape[1]] = matrix_1
+    # padded_matrix = padded_matrix.transpose()
+    total_len = (1000 * 1000)
+
     pos_val_1 =0
-    for row in range(lenB-1):
-        for clmn in range (lenA-1):
+    for row in range(lenA):
+        for clmn in range (lenB):
             try:
-                if (matrix_1 [row][clmn] == 1):
+                if (padded_matrix [row][clmn] == 1):
                     pos_val_1 +=1
                     print(proB,' ', proA, ' ', row, ' ', clmn)
             except:
                 pass
 
-    padded_matrix = np.zeros((1000,1000))
-    padded_matrix [:matrix_1.shape[0], :matrix_1.shape[1]] = matrix_1
-    padded_matrix = padded_matrix.transpose()
-    total_len = (1000 * 1000)
+
+
     pos_val_1 = pos_val_1/total_len
     return padded_matrix, pos_val_1
 
@@ -121,11 +125,11 @@ def open_file(file_npy, sqnc_filename):
 
     np.array(all_INTER_map)
     print ("average +ve interaction", sum(pos_val_1_l)/len(pos_val_1_l))
-    #np.save("VAL_INTER_map", all_INTER_map)
+    #np.save("Test_INTER_map", all_INTER_map)
 
 
 def main():
-    file_npy = np.load("/home/argha/WORK/extracted_data/extracted_data/2D_data/final_data_2d/VAL_intrctn_listF.npy")
+    file_npy = np.load("Train_intrctn_list.npy")
     sqnc_filename = "/home/argha/WORK/extracted_data/extracted_data/all_seq.fasta"
     # filename = "/home/at/work/dataset/ECEN_404_dataset/vector_machine_data/MID_HARD/TEST_MID_HARD_negatives.txt"
     # sqnc_filename = "/home/at/work/dataset/ECEN_404_dataset/vector_machine_data/sequences.fasta"

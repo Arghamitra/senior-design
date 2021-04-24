@@ -2,7 +2,7 @@
 #HRNN
 import numpy as np
 import time
-from data_division import DataManagement
+from redundancy_elimination import DataManagement
 
 
 class DataManagementFasta4clmn(DataManagement):
